@@ -1,7 +1,7 @@
 
 <input type="file" multiple="false" class="file-upload" (change)="onFileUpload($event)">
 
-<button [primary]="true" kendoButton (click)="saveStudentToDatabase()">Save to Database</button>
+<button [primary]="true" [disabled]="saveToDatabaseButtonHidden" kendoButton (click)="saveStudentToDatabase()">Save to Database</button>
 
 <kendo-grid [data]="gridData" [height]="410">
     

@@ -23,7 +23,8 @@ export class HomeComponent implements OnInit {
   date: Date;
   data: [][];
   
-  
+  formData = new FormData();
+  saveToDatabaseButtonHidden = true;
 
   public columns: any[] = [
     { field: 'name', title: 'Student Name' },
@@ -78,12 +79,10 @@ export class HomeComponent implements OnInit {
   }
 
   saveStudentToDatabase() {
-    console.log('data to save in database ', this.dataToUpload);
-    this.webService
-      .CallApi('student', this.dataToUpload, 'POST')
-      .subscribe((res) => {
-        this.getStudentDetailsFromDatabase();
-      });
+    this.webService.CallFileUpload('fileUpload', this.formData, 'POST').subscribe((res)=> {
+      console.log("Excel sheet upload ", res);
+      this.getStudentDetailsFromDatabase();
+    })
   }
 
   onFileUpload(e){
@@ -92,12 +91,9 @@ export class HomeComponent implements OnInit {
   
       if(file){
         fileName = file.name;
-        const formData = new FormData();
-        formData.append("file", file, fileName);
-        this.webService.CallFileUpload('fileUpload', formData, 'POST').subscribe((res)=> {
-          console.log("Excel sheet upload ", res);
-          this.getStudentDetailsFromDatabase();
-        })
+        
+        this.formData.append("file", file, fileName);
+        this.saveToDatabaseButtonHidden = false;
       }
     }
 
