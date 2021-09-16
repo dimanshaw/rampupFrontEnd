@@ -2,19 +2,28 @@ import { Component, OnInit } from '@angular/core';
 import * as XLSX from 'xlsx';
 import { WebService } from '../home/services/web.service';
 import { DatePipe } from '@angular/common';
-import * as moment from 'moment';
+import  Bull  from 'bull';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
 })
+
 export class HomeComponent implements OnInit {
+
+  afuConfig = {
+    uploadAPI: {
+      url:"https://example-file-upload-api"
+    }
+};
   gridData = [];
   dataToUpload = [];
 
   date: Date;
   data: [][];
+  
+  
 
   public columns: any[] = [
     { field: 'name', title: 'Student Name' },
@@ -22,13 +31,15 @@ export class HomeComponent implements OnInit {
     { field: 'dateOfBirth', title: 'Data of Birth' },
     { field: 'age', title: 'Age' },
   ];
+
   constructor(private webService: WebService, public datePipe: DatePipe) {}
 
   ngOnInit(): void {
     this.getStudentDetailsFromDatabase();
   }
 
-  onFileUpload(e) {
+
+  onFileUpload_old(e) {
     const uploadedFile: DataTransfer = <DataTransfer>e.target.files;
 
     if (e.target.files.length !== 1)
@@ -74,6 +85,21 @@ export class HomeComponent implements OnInit {
         this.getStudentDetailsFromDatabase();
       });
   }
+
+  onFileUpload(e){
+    let fileName = '';
+      const file:File = e.target.files[0];
+  
+      if(file){
+        fileName = file.name;
+        const formData = new FormData();
+        formData.append("file", file, fileName);
+        this.webService.CallFileUpload('fileUpload', formData, 'POST').subscribe((res)=> {
+          console.log("Excel sheet upload ", res);
+          this.getStudentDetailsFromDatabase();
+        })
+      }
+    }
 
   getStudentDetailsFromDatabase() {
     this.gridData = [];

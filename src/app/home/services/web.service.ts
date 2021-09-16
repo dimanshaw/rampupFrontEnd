@@ -5,12 +5,29 @@ const httpOptions = {
   headers: new HttpHeaders({ 'content-type': 'application/json'})
 };
 
+const httpOptionsFormData = {
+  headers: new HttpHeaders({ 'content-type': 'multipart/form-data'})
+};
+
 @Injectable({
   providedIn: 'root'
 })
 export class WebService {
 
   constructor(private http: HttpClient) { }
+  CallFileUpload(url: string, req: any, type: string){
+    if(url && req && type){
+      var _url = "http://localhost:3001/" + url;
+
+      switch(type){
+        case "POST":
+          return this.http.post(_url, req);
+          break;
+        default:
+          break;
+      }
+    }
+  }
 
   CallApi(url: string, req: any, type: string){
     if(url && req && type){
