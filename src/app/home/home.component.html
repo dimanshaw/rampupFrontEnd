@@ -1,13 +1,42 @@
+<input
+  type="file"
+  multiple="false"
+  class="file-upload"
+  (change)="onFileUpload($event)"
+/>
 
-<input type="file" multiple="false" class="file-upload" (change)="onFileUpload($event)">
+<button
+  [primary]="true"
+  [disabled]="saveToDatabaseButtonHidden"
+  kendoButton
+  (click)="saveStudentToDatabase()"
+>
+  Save to Database
+</button>
 
-<button [primary]="true" [disabled]="saveToDatabaseButtonHidden" kendoButton (click)="saveStudentToDatabase()">Save to Database</button>
-
-<kendo-grid [data]="gridData" [height]="410">
-    
-    <kendo-grid-column
-        *ngFor="let col of columns"
-        [field]="col.field"
-        [title]="col.title"
-      ></kendo-grid-column>
-  </kendo-grid>
+<kendo-grid
+  [data]="gridData"
+  (edit)="editHandler($event)"
+  (cancel)="cancelHandler($event)"
+  (save)="saveHandler($event)"
+  (remove)="removeHandler($event)"
+  [height]="410"
+>
+  <kendo-grid-column
+    *ngFor="let col of columns"
+    [field]="col.field"
+    [title]="col.title"
+  ></kendo-grid-column>
+  <kendo-grid-command-column title="command" width="220">
+    <ng-template kendoGridCellTemplate let-isNew="isNew">
+      <button kendoGridEditCommand [primary]="true">Edit</button>
+      <button kendoGridRemoveCommand>Remove</button>
+      <button kendoGridSaveCommand [disabled]="formGroup?.invalid">
+        {{ isNew ? "Add" : "Update" }}
+      </button>
+      <button kendoGridCancelCommand>
+        {{ isNew ? "Discard changes" : "Cancel" }}
+      </button>
+    </ng-template>
+  </kendo-grid-command-column>
+</kendo-grid>

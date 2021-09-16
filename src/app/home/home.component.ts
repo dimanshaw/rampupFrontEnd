@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import * as XLSX from 'xlsx';
 import { WebService } from '../home/services/web.service';
 import { DatePipe } from '@angular/common';
-import  Bull  from 'bull';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-home',
@@ -25,6 +25,9 @@ export class HomeComponent implements OnInit {
   
   formData = new FormData();
   saveToDatabaseButtonHidden = true;
+
+  public formGroup: FormGroup;
+  private editedRowIndex: number;
 
   public columns: any[] = [
     { field: 'name', title: 'Student Name' },
@@ -116,4 +119,47 @@ export class HomeComponent implements OnInit {
         });
       });
   }
+
+
+  public editHandler({ sender, rowIndex, dataItem }) {
+    this.closeEditor(sender);
+
+    console.log("Edit handler clicked.  sender - ", sender, " #row index - ", rowIndex , " # dataItem - ", dataItem )
+
+    this.formGroup = new FormGroup({
+      name: new FormControl(dataItem.name),
+      dateOfBirth: new FormControl(dataItem.dateOfBirth),
+      email: new FormControl(dataItem.email),
+      age: new FormControl(dataItem.age),
+    });
+
+    this.editedRowIndex = rowIndex;
+
+    sender.editRow(rowIndex, this.formGroup);
+  }
+
+  private closeEditor(grid, rowIndex = this.editedRowIndex) {
+    grid.closeRow(rowIndex);
+    this.editedRowIndex = undefined;
+    this.formGroup = undefined;
+  }
+
+  public cancelHandler({ sender, rowIndex }) {
+    this.closeEditor(sender, rowIndex);
+  }
+
+  public saveHandler({ sender, rowIndex, formGroup, isNew }) {
+    const student = formGroup.value;
+
+    this.webService.CallApi('updateStudent', student, 'POST');
+
+    sender.closeRow(rowIndex);
+  }
+
+  public removeHandler({ dataItem }) {
+    //this.editService.remove(dataItem);
+
+    console.log("Remove handler clicked ")
+  }
+
 }
