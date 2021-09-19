@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import * as XLSX from 'xlsx';
 import { WebService } from '../home/services/web.service';
 import { DatePipe } from '@angular/common';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormControl, FormGroup } from '@angular/forms';
 
 @Component({
   selector: 'app-home',
@@ -40,6 +40,10 @@ export class HomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.getStudentDetailsFromDatabase();
+    this.webService.listen('events').subscribe((data) => {
+      console.log("from websocket server ", data);
+      this.getStudentDetailsFromDatabase();
+    })
   }
 
 
@@ -83,8 +87,8 @@ export class HomeComponent implements OnInit {
 
   saveStudentToDatabase() {
     this.webService.CallFileUpload('fileUpload', this.formData, 'POST').subscribe((res)=> {
-      console.log("Excel sheet upload ", res);
-      this.getStudentDetailsFromDatabase();
+      console.log("Excel sheet upload ");
+     
     })
   }
 
