@@ -33,7 +33,7 @@ export class HomeComponent implements OnInit {
     { field: 'name', title: 'Student Name' },
     { field: 'email', title: 'E-mail' },
     { field: 'dateOfBirth', title: 'Data of Birth' },
-    { field: 'age', title: 'Age' },
+    { field: 'age', title: 'Age' }
   ];
 
   constructor(private webService: WebService, public datePipe: DatePipe) {}
@@ -119,6 +119,7 @@ export class HomeComponent implements OnInit {
               'yyyy-MM-dd'
             ),
             age: element.age,
+            id: element.id
           });
         });
       });
@@ -128,13 +129,12 @@ export class HomeComponent implements OnInit {
   public editHandler({ sender, rowIndex, dataItem }) {
     this.closeEditor(sender);
 
-    console.log("Edit handler clicked.  sender - ", sender, " #row index - ", rowIndex , " # dataItem - ", dataItem )
-
     this.formGroup = new FormGroup({
       name: new FormControl(dataItem.name),
       dateOfBirth: new FormControl(dataItem.dateOfBirth),
       email: new FormControl(dataItem.email),
       age: new FormControl(dataItem.age),
+      id: new FormControl(dataItem.id)
     });
 
     this.editedRowIndex = rowIndex;
@@ -155,7 +155,12 @@ export class HomeComponent implements OnInit {
   public saveHandler({ sender, rowIndex, formGroup, isNew }) {
     const student = formGroup.value;
 
-    this.webService.CallApi('updateStudent', student, 'POST');
+    this.webService.CallApi('student/updateStudent', student, 'POST').subscribe((res) => {
+      console.log("Updated studetn response ", res);
+      this.getStudentDetailsFromDatabase();
+    })
+
+    console.log("Update student ", isNew, formGroup.value);
 
     sender.closeRow(rowIndex);
   }
