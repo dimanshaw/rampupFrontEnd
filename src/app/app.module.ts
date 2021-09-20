@@ -11,6 +11,8 @@ import { DatePipe } from '@angular/common';
 
 
 import { HttpClientModule } from '@angular/common/http';
+import { NotificationModule } from '@progress/kendo-angular-notification';
+
 
 @NgModule({
   declarations: [
@@ -23,7 +25,8 @@ import { HttpClientModule } from '@angular/common/http';
     ButtonsModule,
     BrowserAnimationsModule,
     GridModule,
-    HttpClientModule
+    HttpClientModule,
+    NotificationModule
   ],
   providers: [DatePipe],
   bootstrap: [AppComponent]

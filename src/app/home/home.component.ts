@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 import { WebService } from '../home/services/web.service';
 import { DatePipe } from '@angular/common';
 import { FormControl, FormGroup } from '@angular/forms';
+import { NotificationService } from "@progress/kendo-angular-notification";
 
 @Component({
   selector: 'app-home',
@@ -36,7 +37,7 @@ export class HomeComponent implements OnInit {
     { field: 'age', title: 'Age' }
   ];
 
-  constructor(private webService: WebService, public datePipe: DatePipe) {}
+  constructor(private webService: WebService, public datePipe: DatePipe, private notificationService: NotificationService) {}
 
   ngOnInit(): void {
     this.getStudentDetailsFromDatabase();
@@ -160,7 +161,7 @@ export class HomeComponent implements OnInit {
     //   this.getStudentDetailsFromDatabase();
     // })
 
-    this.updateStudentApiCall(student);
+    this.updateStudentApiCall(student, 'update');
 
     console.log("Update student ", isNew, formGroup.value);
 
@@ -183,15 +184,34 @@ export class HomeComponent implements OnInit {
 
     console.log("Remove handler clicked ", this.formGroup.value)
 
-    this.updateStudentApiCall(student);
+    this.updateStudentApiCall(student, 'remove');
 
   }
 
-  private updateStudentApiCall(student){
+  private updateStudentApiCall(student, apiCall){
     this.webService.CallApi('student/updateStudent', student, 'POST').subscribe((res) => {
       console.log("Updated studetn response ", res);
       this.getStudentDetailsFromDatabase();
+      if(apiCall == 'remove'){
+        this.showNotification('success', 'Student removed!!!')
+      }else if(apiCall == 'update'){
+        this.showNotification('success', 'Update success!!!')
+      }
+
+      
+
     })
   }
+
+  public showNotification(type, message): void {
+    this.notificationService.show({
+      content: message,
+      hideAfter: 600,
+      position: { horizontal: "right", vertical: "bottom" },
+      animation: { type: "fade", duration: 400 },
+      type: { style: type, icon: true },
+    });
+  }
+
 
 }
