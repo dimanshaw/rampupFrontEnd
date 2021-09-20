@@ -155,20 +155,43 @@ export class HomeComponent implements OnInit {
   public saveHandler({ sender, rowIndex, formGroup, isNew }) {
     const student = formGroup.value;
 
-    this.webService.CallApi('student/updateStudent', student, 'POST').subscribe((res) => {
-      console.log("Updated studetn response ", res);
-      this.getStudentDetailsFromDatabase();
-    })
+    // this.webService.CallApi('student/updateStudent', student, 'POST').subscribe((res) => {
+    //   console.log("Updated studetn response ", res);
+    //   this.getStudentDetailsFromDatabase();
+    // })
+
+    this.updateStudentApiCall(student);
 
     console.log("Update student ", isNew, formGroup.value);
 
     sender.closeRow(rowIndex);
   }
 
-  public removeHandler({ dataItem }) {
+  public removeHandler({ sender, rowIndex, dataItem }) {
     //this.editService.remove(dataItem);
 
-    console.log("Remove handler clicked ")
+    this.formGroup = this.formGroup = new FormGroup({
+      name: new FormControl(dataItem.name),
+      dateOfBirth: new FormControl(dataItem.dateOfBirth),
+      email: new FormControl(dataItem.email),
+      age: new FormControl(dataItem.age),
+      id: new FormControl(dataItem.id),
+      isDeleted: new FormControl(true)
+    });
+
+    const student = this.formGroup.value;
+
+    console.log("Remove handler clicked ", this.formGroup.value)
+
+    this.updateStudentApiCall(student);
+
+  }
+
+  private updateStudentApiCall(student){
+    this.webService.CallApi('student/updateStudent', student, 'POST').subscribe((res) => {
+      console.log("Updated studetn response ", res);
+      this.getStudentDetailsFromDatabase();
+    })
   }
 
 }
