@@ -17,6 +17,8 @@ export class HomeComponent implements OnInit {
   //     url: 'https://example-file-upload-api',
   //   },
   // };
+
+  
   gridData: GridDataResult;
   dataToUpload = [];
 
@@ -51,7 +53,10 @@ export class HomeComponent implements OnInit {
     this.getStudentDetailsFromDatabase();
     this.webService.listen('events').subscribe((data) => {
       console.log('from websocket server ', data);
+
+      
       this.getStudentDetailsFromDatabase();
+      this.showNotification('success', 'Excel file uploaded!!!');
     });
   }
 
@@ -223,10 +228,13 @@ export class HomeComponent implements OnInit {
   public showNotification(type, message): void {
     this.notificationService.show({
       content: message,
-      hideAfter: 600,
-      position: { horizontal: 'right', vertical: 'bottom' },
-      animation: { type: 'fade', duration: 400 },
+      hideAfter: 3000,
+      position: { horizontal: 'right', vertical: 'top' },
+      height: 60,
+      width: 500,
+      animation: { type: 'slide', duration: 400 },
       type: { style: type, icon: true },
+      
     });
   }
 
