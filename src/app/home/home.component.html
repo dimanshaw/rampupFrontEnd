@@ -21,6 +21,9 @@
   (save)="saveHandler($event)"
   (remove)="removeHandler($event)"
   [height]="410"
+  [pageSize]="pageSize"
+  [pageable]="true"
+  (pageChange)="pageChange($event)"
 >
   <kendo-grid-column
     *ngFor="let col of columns"

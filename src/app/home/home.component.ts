@@ -3,50 +3,57 @@ import * as XLSX from 'xlsx';
 import { WebService } from '../home/services/web.service';
 import { DatePipe } from '@angular/common';
 import { FormControl, FormGroup } from '@angular/forms';
-import { NotificationService } from "@progress/kendo-angular-notification";
+import { NotificationService } from '@progress/kendo-angular-notification';
+import { GridDataResult, PageChangeEvent } from '@progress/kendo-angular-grid';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
 })
-
 export class HomeComponent implements OnInit {
-
-  afuConfig = {
-    uploadAPI: {
-      url:"https://example-file-upload-api"
-    }
-};
-  gridData = [];
+  // afuConfig = {
+  //   uploadAPI: {
+  //     url: 'https://example-file-upload-api',
+  //   },
+  // };
+  gridData: GridDataResult;
   dataToUpload = [];
 
   date: Date;
   data: [][];
-  
+
+  private items: any[] ;
+
   formData = new FormData();
   saveToDatabaseButtonHidden = true;
 
   public formGroup: FormGroup;
   private editedRowIndex: number;
 
+  public pageSize = 10;
+  public skip = 0;
+
   public columns: any[] = [
     { field: 'name', title: 'Student Name' },
     { field: 'email', title: 'E-mail' },
     { field: 'dateOfBirth', title: 'Data of Birth' },
-    { field: 'age', title: 'Age' }
+    { field: 'age', title: 'Age' },
   ];
 
-  constructor(private webService: WebService, public datePipe: DatePipe, private notificationService: NotificationService) {}
+  constructor(
+    private webService: WebService,
+    public datePipe: DatePipe,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit(): void {
     this.getStudentDetailsFromDatabase();
     this.webService.listen('events').subscribe((data) => {
-      console.log("from websocket server ", data);
+      console.log('from websocket server ', data);
       this.getStudentDetailsFromDatabase();
-    })
+    });
   }
-
 
   onFileUpload_old(e) {
     const uploadedFile: DataTransfer = <DataTransfer>e.target.files;
@@ -87,32 +94,33 @@ export class HomeComponent implements OnInit {
   }
 
   saveStudentToDatabase() {
-    this.webService.CallFileUpload('fileUpload', this.formData, 'POST').subscribe((res)=> {
-      console.log("Excel sheet upload ");
-     
-    })
+    this.webService
+      .CallFileUpload('fileUpload', this.formData, 'POST')
+      .subscribe((res) => {
+        console.log('Excel sheet upload ');
+      });
   }
 
-  onFileUpload(e){
+  onFileUpload(e) {
     let fileName = '';
-      const file:File = e.target.files[0];
-  
-      if(file){
-        fileName = file.name;
-        
-        this.formData.append("file", file, fileName);
-        this.saveToDatabaseButtonHidden = false;
-      }
+    const file: File = e.target.files[0];
+
+    if (file) {
+      fileName = file.name;
+
+      this.formData.append('file', file, fileName);
+      this.saveToDatabaseButtonHidden = false;
     }
+  }
 
   getStudentDetailsFromDatabase() {
-    this.gridData = [];
+    this.items = [];
     let x = '';
     this.webService
-      .CallApi('student/findAll', this.gridData, 'GET')
+      .CallApi('student/findAll', this.items, 'GET')
       .subscribe((res: any) => {
         res.forEach((element) => {
-          this.gridData.push({
+          this.items.push({
             name: element.name,
             email: element.email,
             dateOfBirth: this.datePipe.transform(
@@ -120,12 +128,14 @@ export class HomeComponent implements OnInit {
               'yyyy-MM-dd'
             ),
             age: element.age,
-            id: element.id
+            id: element.id,
           });
         });
+        this.loadItems();
       });
-  }
 
+      console.log("Result ", this.items)
+  }
 
   public editHandler({ sender, rowIndex, dataItem }) {
     this.closeEditor(sender);
@@ -135,7 +145,7 @@ export class HomeComponent implements OnInit {
       dateOfBirth: new FormControl(dataItem.dateOfBirth),
       email: new FormControl(dataItem.email),
       age: new FormControl(dataItem.age),
-      id: new FormControl(dataItem.id)
+      id: new FormControl(dataItem.id),
     });
 
     this.editedRowIndex = rowIndex;
@@ -163,7 +173,7 @@ export class HomeComponent implements OnInit {
 
     this.updateStudentApiCall(student, 'update');
 
-    console.log("Update student ", isNew, formGroup.value);
+    console.log('Update student ', isNew, formGroup.value);
 
     sender.closeRow(rowIndex);
   }
@@ -177,41 +187,58 @@ export class HomeComponent implements OnInit {
       email: new FormControl(dataItem.email),
       age: new FormControl(dataItem.age),
       id: new FormControl(dataItem.id),
-      isDeleted: new FormControl(true)
+      isDeleted: new FormControl(true),
     });
 
     const student = this.formGroup.value;
 
-    console.log("Remove handler clicked ", this.formGroup.value)
+    console.log('Remove handler clicked ', this.formGroup.value);
 
     this.updateStudentApiCall(student, 'remove');
-
   }
 
-  private updateStudentApiCall(student, apiCall){
-    this.webService.CallApi('student/updateStudent', student, 'POST').subscribe((res) => {
-      console.log("Updated studetn response ", res);
-      this.getStudentDetailsFromDatabase();
-      if(apiCall == 'remove'){
-        this.showNotification('success', 'Student removed!!!')
-      }else if(apiCall == 'update'){
-        this.showNotification('success', 'Update success!!!')
-      }
-
-      
-
-    })
+  private updateStudentApiCall(student, apiCall) {
+    this.webService
+      .CallApi('student/updateStudent', student, 'POST')
+      .subscribe((res) => {
+        if (res) {
+          console.log('Updated studetn response ', res);
+          this.getStudentDetailsFromDatabase();
+          if (apiCall == 'remove') {
+            this.showNotification('success', 'Student removed!!!');
+          } else if (apiCall == 'update') {
+            this.showNotification('success', 'Update success!!!');
+          }
+        }else{
+          if (apiCall == 'remove') {
+            this.showNotification('error', 'Error in studetn remove');
+          } else if (apiCall == 'update') {
+            this.showNotification('error', 'Error in student update');
+          }
+        }
+      });
   }
 
   public showNotification(type, message): void {
     this.notificationService.show({
       content: message,
       hideAfter: 600,
-      position: { horizontal: "right", vertical: "bottom" },
-      animation: { type: "fade", duration: 400 },
+      position: { horizontal: 'right', vertical: 'bottom' },
+      animation: { type: 'fade', duration: 400 },
       type: { style: type, icon: true },
     });
   }
 
+  public pageChange(event: PageChangeEvent): void {
+    this.skip = event.skip;
+    this.loadItems();
+  }
+
+  private loadItems(): void {
+    this.gridData = {
+      data: this.items.slice(this.skip, this.skip + this.pageSize),
+      total: this.items.length,
+    };
+  }
 
 }
