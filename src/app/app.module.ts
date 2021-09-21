@@ -8,7 +8,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { GridModule } from '@progress/kendo-angular-grid';
 import { HomeComponent } from './home/home.component';
 import { DatePipe } from '@angular/common';
-
+import { DialogModule } from "@progress/kendo-angular-dialog";
 
 import { HttpClientModule } from '@angular/common/http';
 import { NotificationModule } from '@progress/kendo-angular-notification';
@@ -26,7 +26,8 @@ import { NotificationModule } from '@progress/kendo-angular-notification';
     BrowserAnimationsModule,
     GridModule,
     HttpClientModule,
-    NotificationModule
+    NotificationModule,
+    DialogModule
   ],
   providers: [DatePipe],
   bootstrap: [AppComponent]

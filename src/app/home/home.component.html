@@ -43,3 +43,21 @@
     </ng-template>
   </kendo-grid-command-column>
 </kendo-grid>
+
+
+
+    <kendo-dialog
+      title="Please confirm"
+      *ngIf="opened"
+      (close)="close('cancel')"
+      [minWidth]="250"
+      [width]="450"
+    >
+      <p style="margin: 30px; text-align: center;">
+        Are you sure you want to delete?
+      </p>
+      <kendo-dialog-actions>
+        <button kendoButton (click)="close()">No</button>
+        <button kendoButton (click)="onDeleteConfirm()" primary="true">Yes</button>
+      </kendo-dialog-actions>
+    </kendo-dialog>

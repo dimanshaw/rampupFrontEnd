@@ -18,6 +18,12 @@ export class HomeComponent implements OnInit {
   //   },
   // };
 
+  public opened = false;
+
+  private deleteSender;
+  private deleteRowIndex;
+  private deleteDataItem;
+
   
   gridData: GridDataResult;
   dataToUpload = [];
@@ -171,11 +177,6 @@ export class HomeComponent implements OnInit {
   public saveHandler({ sender, rowIndex, formGroup, isNew }) {
     const student = formGroup.value;
 
-    // this.webService.CallApi('student/updateStudent', student, 'POST').subscribe((res) => {
-    //   console.log("Updated studetn response ", res);
-    //   this.getStudentDetailsFromDatabase();
-    // })
-
     this.updateStudentApiCall(student, 'update');
 
     console.log('Update student ', isNew, formGroup.value);
@@ -184,14 +185,24 @@ export class HomeComponent implements OnInit {
   }
 
   public removeHandler({ sender, rowIndex, dataItem }) {
-    //this.editService.remove(dataItem);
 
+
+    this.deleteSender = sender;
+    this.deleteRowIndex = rowIndex;
+    this.deleteDataItem = dataItem;
+    this.opened = true;
+
+
+    
+  }
+
+  private onDeleteConfirm(){
     this.formGroup = this.formGroup = new FormGroup({
-      name: new FormControl(dataItem.name),
-      dateOfBirth: new FormControl(dataItem.dateOfBirth),
-      email: new FormControl(dataItem.email),
-      age: new FormControl(dataItem.age),
-      id: new FormControl(dataItem.id),
+      name: new FormControl(this.deleteDataItem.name),
+      dateOfBirth: new FormControl(this.deleteDataItem.dateOfBirth),
+      email: new FormControl(this.deleteDataItem.email),
+      age: new FormControl(this.deleteDataItem.age),
+      id: new FormControl(this.deleteDataItem.id),
       isDeleted: new FormControl(true),
     });
 
@@ -200,6 +211,8 @@ export class HomeComponent implements OnInit {
     console.log('Remove handler clicked ', this.formGroup.value);
 
     this.updateStudentApiCall(student, 'remove');
+
+    this.close();
   }
 
   private updateStudentApiCall(student, apiCall) {
@@ -249,4 +262,14 @@ export class HomeComponent implements OnInit {
       total: this.items.length,
     };
   }
+
+  public close() {
+    
+    this.opened = false;
+  }
+
+  public open() {
+    this.opened = true;
+  }
+
 }
