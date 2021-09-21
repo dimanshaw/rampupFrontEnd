@@ -23,7 +23,7 @@ export class HomeComponent implements OnInit {
   date: Date;
   data: [][];
 
-  private items: any[] ;
+  private items: any[];
 
   formData = new FormData();
   saveToDatabaseButtonHidden = true;
@@ -134,7 +134,7 @@ export class HomeComponent implements OnInit {
         this.loadItems();
       });
 
-      console.log("Result ", this.items)
+    console.log('Result ', this.items);
   }
 
   public editHandler({ sender, rowIndex, dataItem }) {
@@ -200,21 +200,22 @@ export class HomeComponent implements OnInit {
   private updateStudentApiCall(student, apiCall) {
     this.webService
       .CallApi('student/updateStudent', student, 'POST')
-      .subscribe((res) => {
+      .subscribe((res: any) => {
         if (res) {
-          console.log('Updated studetn response ', res);
-          this.getStudentDetailsFromDatabase();
-          if (apiCall == 'remove') {
-            this.showNotification('success', 'Student removed!!!');
-          } else if (apiCall == 'update') {
-            this.showNotification('success', 'Update success!!!');
-          }
-        }else{
-          if (apiCall == 'remove') {
-            this.showNotification('error', 'Error in studetn remove');
-          } else if (apiCall == 'update') {
-            this.showNotification('error', 'Error in student update');
-          }
+          
+            // if (apiCall == 'remove') {
+            //   this.showNotification('error', 'Error in studetn remove');
+            // } else if (apiCall == 'update') {
+            //   this.showNotification('error', 'Error in student update');
+            // }
+            console.log('Updated studetn response ', res);
+            this.getStudentDetailsFromDatabase();
+            if (apiCall == 'remove') {
+              this.showNotification('success', 'Student removed!!!');
+            } else if (apiCall == 'update') {
+              this.showNotification('success', 'Update success!!!');
+            }
+          
         }
       });
   }
@@ -240,5 +241,4 @@ export class HomeComponent implements OnInit {
       total: this.items.length,
     };
   }
-
 }
