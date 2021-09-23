@@ -12,6 +12,7 @@ import { DialogModule } from "@progress/kendo-angular-dialog";
 
 import { HttpClientModule } from '@angular/common/http';
 import { NotificationModule } from '@progress/kendo-angular-notification';
+import { GraphQLModule } from './graphql.module';
 
 
 @NgModule({
@@ -27,7 +28,8 @@ import { NotificationModule } from '@progress/kendo-angular-notification';
     GridModule,
     HttpClientModule,
     NotificationModule,
-    DialogModule
+    DialogModule,
+    GraphQLModule
   ],
   providers: [DatePipe],
   bootstrap: [AppComponent]

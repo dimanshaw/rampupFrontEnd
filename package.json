@@ -43,6 +43,7 @@
     "@progress/kendo-theme-default": "latest",
     "@types/socket.io-client": "^3.0.0",
     "angular-file-uploader": "^7.0.3",
+    "apollo-angular": "^2.6.0",
     "bull": "^3.29.2",
     "moment": "^2.29.1",
     "pg": "^8.7.1",
@@ -51,7 +52,9 @@
     "tslib": "^2.0.0",
     "typeorm": "^0.2.37",
     "xlsx": "^0.17.1",
-    "zone.js": "~0.10.3"
+    "zone.js": "~0.10.3",
+    "@apollo/client": "^3.0.0",
+    "graphql": "^15.0.0"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~0.1000.0",

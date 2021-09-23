@@ -5,6 +5,44 @@ import { DatePipe } from '@angular/common';
 import { FormControl, FormGroup } from '@angular/forms';
 import { NotificationService } from '@progress/kendo-angular-notification';
 import { GridDataResult, PageChangeEvent } from '@progress/kendo-angular-grid';
+import { Apollo, gql } from 'apollo-angular';
+import { Student } from '../models/student';
+
+let deleteId;
+let updateId;
+
+let updateName;
+let updateEmail;
+let updateDOB;
+let updateAge;
+let updateIsdeleted;
+
+const Get_StudentList = gql`query{
+  students{
+    id,
+    name,
+    email,
+    dateOfBirth,
+    age,
+    isDeleted
+  }
+}`;
+
+const Delete_Student = gql`mutation {
+  deleteStudent(id: ${deleteId})
+}`;
+
+const Update_Student = gql`mutation {
+  updateStudent(id : ${updateId}
+  input: {
+    name : ${updateName}
+    email : ${updateEmail}
+    age : ${updateAge}
+    dateOfBirth : ${updateDOB}
+    isDeleted : ${updateIsdeleted}
+  })
+}`;
+
 
 @Component({
   selector: 'app-home',
@@ -12,11 +50,8 @@ import { GridDataResult, PageChangeEvent } from '@progress/kendo-angular-grid';
   styleUrls: ['./home.component.css'],
 })
 export class HomeComponent implements OnInit {
-  // afuConfig = {
-  //   uploadAPI: {
-  //     url: 'https://example-file-upload-api',
-  //   },
-  // };
+ 
+  allStudents: Student[] = [];
 
   public opened = false;
 
@@ -31,7 +66,7 @@ export class HomeComponent implements OnInit {
   date: Date;
   data: [][];
 
-  private items: any[];
+  //private items: any[];
 
   formData = new FormData();
   saveToDatabaseButtonHidden = true;
@@ -52,21 +87,35 @@ export class HomeComponent implements OnInit {
   constructor(
     private webService: WebService,
     public datePipe: DatePipe,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private apollo: Apollo
   ) {}
 
   ngOnInit(): void {
-    this.getStudentDetailsFromDatabase();
+
+
+   this.getStudentDetailsFromDataBase();
+
+
+
+
+    //this.getStudentDetailsFromDatabase();
+    this.getStudentDetailsFromDataBase();
     this.webService.listen('events').subscribe((data) => {
       console.log('from websocket server ', data);
 
       
-      this.getStudentDetailsFromDatabase();
+      //this.getStudentDetailsFromDatabase();
+      this.getStudentDetailsFromDataBase();
       this.showNotification('success', 'Excel file uploaded!!!');
     });
   }
 
+
+
   onFileUpload_old(e) {
+
+    
     const uploadedFile: DataTransfer = <DataTransfer>e.target.files;
 
     if (e.target.files.length !== 1)
@@ -124,29 +173,18 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  getStudentDetailsFromDatabase() {
-    this.items = [];
-    let x = '';
-    this.webService
-      .CallApi('student/findAll', this.items, 'GET')
-      .subscribe((res: any) => {
-        res.forEach((element) => {
-          this.items.push({
-            name: element.name,
-            email: element.email,
-            dateOfBirth: this.datePipe.transform(
-              element.dateOfBirth,
-              'yyyy-MM-dd'
-            ),
-            age: element.age,
-            id: element.id,
-          });
-        });
-        this.loadItems();
-      });
-
-    console.log('Result ', this.items);
+  getStudentDetailsFromDataBase(){
+    this.apollo.watchQuery<any>({
+      query: Get_StudentList
+    }).valueChanges
+    .subscribe(({data, loading}) => {
+      this.allStudents = data.students;
+      console.log("graphql data query ", data.students);
+      console.log(loading);
+      this.loadItems();
+    })
   }
+
 
   public editHandler({ sender, rowIndex, dataItem }) {
     this.closeEditor(sender);
@@ -179,7 +217,21 @@ export class HomeComponent implements OnInit {
 
     this.updateStudentApiCall(student, 'update');
 
-    console.log('Update student ', isNew, formGroup.value);
+    updateId = student.id;
+    updateName = student.name;
+    updateEmail = student.email;
+    updateDOB = student.dateOfBirth;
+    updateAge = student.age;
+
+    this.apollo.watchQuery<any>({
+      query: Update_Student
+    }).valueChanges
+    .subscribe(({data, loading}) => {
+      this.allStudents = data.students;
+      console.log("graphql data query ", data.students);
+      console.log(loading);
+      this.loadItems();
+    })
 
     sender.closeRow(rowIndex);
   }
@@ -197,25 +249,29 @@ export class HomeComponent implements OnInit {
   }
 
   private onDeleteConfirm(){
-    this.formGroup = this.formGroup = new FormGroup({
-      name: new FormControl(this.deleteDataItem.name),
-      dateOfBirth: new FormControl(this.deleteDataItem.dateOfBirth),
-      email: new FormControl(this.deleteDataItem.email),
-      age: new FormControl(this.deleteDataItem.age),
-      id: new FormControl(this.deleteDataItem.id),
-      isDeleted: new FormControl(true),
-    });
 
-    const student = this.formGroup.value;
+    updateId = this.deleteDataItem.id;
+    updateIsdeleted = true;
 
-    console.log('Remove handler clicked ', this.formGroup.value);
+    console.log("On delete Confirm ", updateId);
 
-    this.updateStudentApiCall(student, 'remove');
+
+    this.apollo.watchQuery<any>({
+      query: Update_Student
+    }).valueChanges
+    .subscribe(() => {
+      this.getStudentDetailsFromDataBase();
+    })
+
+    
 
     this.close();
   }
 
   private updateStudentApiCall(student, apiCall) {
+
+
+
     this.webService
       .CallApi('student/updateStudent', student, 'POST')
       .subscribe((res: any) => {
@@ -227,7 +283,8 @@ export class HomeComponent implements OnInit {
             //   this.showNotification('error', 'Error in student update');
             // }
             console.log('Updated studetn response ', res);
-            this.getStudentDetailsFromDatabase();
+            //this.getStudentDetailsFromDatabase();
+            this.getStudentDetailsFromDataBase();
             if (apiCall == 'remove') {
               this.showNotification('success', 'Student removed!!!');
             } else if (apiCall == 'update') {
@@ -258,9 +315,11 @@ export class HomeComponent implements OnInit {
 
   private loadItems(): void {
     this.gridData = {
-      data: this.items.slice(this.skip, this.skip + this.pageSize),
-      total: this.items.length,
+      data: this.allStudents.slice(this.skip, this.skip + this.pageSize),
+      total: this.allStudents.length,
     };
+
+    console.log("grid data ",this.gridData)
   }
 
   public close() {
