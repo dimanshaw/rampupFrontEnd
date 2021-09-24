@@ -17,16 +17,18 @@ let updateDOB;
 let updateAge;
 let updateIsdeleted;
 
-const Get_StudentList = gql`query{
-  students{
-    id,
-    name,
-    email,
-    dateOfBirth,
-    age,
-    isDeleted
+const Get_StudentList = gql`
+  query {
+    students(isDeleted: false) {
+      id
+      name
+      email
+      dateOfBirth
+      age
+      isDeleted
+    }
   }
-}`;
+`;
 
 const Delete_Student = gql`mutation {
   deleteStudent(id: ${deleteId})
@@ -43,14 +45,12 @@ const Update_Student = gql`mutation {
   })
 }`;
 
-
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
 })
 export class HomeComponent implements OnInit {
- 
   allStudents: Student[] = [];
 
   public opened = false;
@@ -59,7 +59,6 @@ export class HomeComponent implements OnInit {
   private deleteRowIndex;
   private deleteDataItem;
 
-  
   gridData: GridDataResult;
   dataToUpload = [];
 
@@ -92,30 +91,18 @@ export class HomeComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-
-
-   this.getStudentDetailsFromDataBase();
-
-
-
+    this.getStudentDetailsFromDataBase();
 
     //this.getStudentDetailsFromDatabase();
     this.getStudentDetailsFromDataBase();
     this.webService.listen('events').subscribe((data) => {
-      console.log('from websocket server ', data);
-
-      
       //this.getStudentDetailsFromDatabase();
       this.getStudentDetailsFromDataBase();
       this.showNotification('success', 'Excel file uploaded!!!');
     });
   }
 
-
-
   onFileUpload_old(e) {
-
-    
     const uploadedFile: DataTransfer = <DataTransfer>e.target.files;
 
     if (e.target.files.length !== 1)
@@ -146,8 +133,6 @@ export class HomeComponent implements OnInit {
             new Date((x[2] - 25569) * 86400000).getFullYear(),
         });
       }
-
-      console.log('grid dataset ', this.dataToUpload);
     };
 
     reader.readAsBinaryString(e.target.files[0]);
@@ -156,9 +141,7 @@ export class HomeComponent implements OnInit {
   saveStudentToDatabase() {
     this.webService
       .CallFileUpload('fileUpload', this.formData, 'POST')
-      .subscribe((res) => {
-        console.log('Excel sheet upload ');
-      });
+      .subscribe((res) => {});
   }
 
   onFileUpload(e) {
@@ -173,18 +156,16 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  getStudentDetailsFromDataBase(){
-    this.apollo.watchQuery<any>({
-      query: Get_StudentList
-    }).valueChanges
-    .subscribe(({data, loading}) => {
-      this.allStudents = data.students;
-      console.log("graphql data query ", data.students);
-      console.log(loading);
-      this.loadItems();
-    })
+  getStudentDetailsFromDataBase() {
+    this.apollo
+      .watchQuery<any>({
+        query: Get_StudentList,
+      })
+      .valueChanges.subscribe(({ data, loading }) => {
+        this.allStudents = data.students;
+        this.loadItems();
+      });
   }
-
 
   public editHandler({ sender, rowIndex, dataItem }) {
     this.closeEditor(sender);
@@ -198,6 +179,7 @@ export class HomeComponent implements OnInit {
     });
 
     this.editedRowIndex = rowIndex;
+    
 
     sender.editRow(rowIndex, this.formGroup);
   }
@@ -215,7 +197,7 @@ export class HomeComponent implements OnInit {
   public saveHandler({ sender, rowIndex, formGroup, isNew }) {
     const student = formGroup.value;
 
-    this.updateStudentApiCall(student, 'update');
+    //this.updateStudentApiCall(student, 'update');
 
     updateId = student.id;
     updateName = student.name;
@@ -223,43 +205,64 @@ export class HomeComponent implements OnInit {
     updateDOB = student.dateOfBirth;
     updateAge = student.age;
 
-    this.apollo.watchQuery<any>({
-      query: Update_Student
-    }).valueChanges
-    .subscribe(({data, loading}) => {
-      this.allStudents = data.students;
-      console.log("graphql data query ", data.students);
-      console.log(loading);
-      this.loadItems();
+    console.log("Form group ", student)
+
+    this.apollo.mutate({
+      mutation: gql`mutation{
+        updateStudent(input: {
+          id: ${updateId}
+          name: \"${updateName}\"
+          email: \"${updateEmail}\"
+          age: ${updateAge}
+          dateOfBirth: \"${updateDOB}\"
+          isDeleted: false
+        })
+      }`
+    }).subscribe((data) => {
+      console.log( "Update response ",data)
+      this.getStudentDetailsFromDataBase();
     })
+
 
     sender.closeRow(rowIndex);
   }
 
   public removeHandler({ sender, rowIndex, dataItem }) {
-
-
     this.deleteSender = sender;
     this.deleteRowIndex = rowIndex;
     this.deleteDataItem = dataItem;
     this.opened = true;
-
-
-    
   }
 
-  private onDeleteConfirm(){
-
+  private onDeleteConfirm() {
     updateId = this.deleteDataItem.id;
+
     updateIsdeleted = true;
+    updateName = this.deleteDataItem.name;
+    updateEmail = this.deleteDataItem.email;
+    updateAge = this.deleteDataItem.age;
+    updateDOB = this.deleteDataItem.dataOfBirth;
 
-    console.log("On delete Confirm ", updateId);
+    console.log("dob ", this.deleteDataItem)
 
+    // this.apollo.mutate({
+    //   mutation: gql`mutation{
+    //     deleteStudentPermanant(id: ${updateId})
+    //   }`
+    // }).subscribe((data) => {
+    //   console.log( data)
+    // })
 
-    this.apollo.watchQuery<any>({
-      query: Update_Student
-    }).valueChanges
-    .subscribe(() => {
+    this.apollo.mutate({
+      mutation: gql`mutation{
+        updateStudent(input: {
+          id: ${updateId}
+          
+          isDeleted: true
+        })
+      }`
+    }).subscribe((data) => {
+      console.log( "Update response ",data)
       this.getStudentDetailsFromDataBase();
     })
 
@@ -269,30 +272,9 @@ export class HomeComponent implements OnInit {
   }
 
   private updateStudentApiCall(student, apiCall) {
-
-
-
-    this.webService
-      .CallApi('student/updateStudent', student, 'POST')
-      .subscribe((res: any) => {
-        if (res) {
-          
-            // if (apiCall == 'remove') {
-            //   this.showNotification('error', 'Error in studetn remove');
-            // } else if (apiCall == 'update') {
-            //   this.showNotification('error', 'Error in student update');
-            // }
-            console.log('Updated studetn response ', res);
-            //this.getStudentDetailsFromDatabase();
-            this.getStudentDetailsFromDataBase();
-            if (apiCall == 'remove') {
-              this.showNotification('success', 'Student removed!!!');
-            } else if (apiCall == 'update') {
-              this.showNotification('success', 'Update success!!!');
-            }
-          
-        }
-      });
+    
+    console.log("update called")
+  
   }
 
   public showNotification(type, message): void {
@@ -304,7 +286,6 @@ export class HomeComponent implements OnInit {
       width: 500,
       animation: { type: 'slide', duration: 400 },
       type: { style: type, icon: true },
-      
     });
   }
 
@@ -318,17 +299,13 @@ export class HomeComponent implements OnInit {
       data: this.allStudents.slice(this.skip, this.skip + this.pageSize),
       total: this.allStudents.length,
     };
-
-    console.log("grid data ",this.gridData)
   }
 
   public close() {
-    
     this.opened = false;
   }
 
   public open() {
     this.opened = true;
   }
-
 }
