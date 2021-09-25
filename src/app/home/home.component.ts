@@ -93,49 +93,12 @@ export class HomeComponent implements OnInit {
   ngOnInit(): void {
     this.getStudentDetailsFromDataBase();
 
-    //this.getStudentDetailsFromDatabase();
     this.getStudentDetailsFromDataBase();
     this.webService.listen('events').subscribe((data) => {
-      //this.getStudentDetailsFromDatabase();
+      console.log("file upload response ", data);
       this.getStudentDetailsFromDataBase();
       this.showNotification('success', 'Excel file uploaded!!!');
     });
-  }
-
-  onFileUpload_old(e) {
-    const uploadedFile: DataTransfer = <DataTransfer>e.target.files;
-
-    if (e.target.files.length !== 1)
-      throw new Error('Cannot upload multiple files at once!!!');
-
-    const reader: FileReader = new FileReader();
-
-    reader.onload = (ev: any) => {
-      const bstr: string = ev.target.result;
-      const wb: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' });
-      const wsName: string = wb.SheetNames[0];
-      const ws: XLSX.WorkSheet = wb.Sheets[wsName];
-
-      this.data = XLSX.utils.sheet_to_json(ws, { header: 1 });
-      let x: any = this.data[0];
-
-      for (let index = 1; index < this.data.length; index++) {
-        let x: any = this.data[index];
-        this.dataToUpload.push({
-          name: x[0],
-          email: x[1],
-          dateOfBirth: this.datePipe.transform(
-            new Date((x[2] - 25569) * 86400000),
-            'yyyy-MM-dd'
-          ),
-          age:
-            new Date().getFullYear() -
-            new Date((x[2] - 25569) * 86400000).getFullYear(),
-        });
-      }
-    };
-
-    reader.readAsBinaryString(e.target.files[0]);
   }
 
   saveStudentToDatabase() {
@@ -157,6 +120,7 @@ export class HomeComponent implements OnInit {
   }
 
   getStudentDetailsFromDataBase() {
+    console.log("Fetching data from the database")
     this.apollo
       .watchQuery<any>({
         query: Get_StudentList,
@@ -271,11 +235,6 @@ export class HomeComponent implements OnInit {
     this.close();
   }
 
-  private updateStudentApiCall(student, apiCall) {
-    
-    console.log("update called")
-  
-  }
 
   public showNotification(type, message): void {
     this.notificationService.show({
