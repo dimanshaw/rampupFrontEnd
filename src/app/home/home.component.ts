@@ -23,7 +23,7 @@ const Get_StudentList = gql`
       id
       name
       email
-      dateOfBirth
+      dateofbirth
       age
       isDeleted
     }
@@ -40,7 +40,7 @@ const Update_Student = gql`mutation {
     name : ${updateName}
     email : ${updateEmail}
     age : ${updateAge}
-    dateOfBirth : ${updateDOB}
+    dateofbirth : ${updateDOB}
     isDeleted : ${updateIsdeleted}
   })
 }`;
@@ -79,7 +79,7 @@ export class HomeComponent implements OnInit {
   public columns: any[] = [
     { field: 'name', title: 'Student Name' },
     { field: 'email', title: 'E-mail' },
-    { field: 'dateOfBirth', title: 'Data of Birth' },
+    { field: 'dateofbirth', title: 'Data of Birth' },
     { field: 'age', title: 'Age' },
   ];
 
@@ -185,6 +185,10 @@ export class HomeComponent implements OnInit {
     }).subscribe((data) => {
       console.log( "Update response ",data)
       this.getStudentDetailsFromDataBase();
+    },
+    ()=> {
+      console.log("this is the bad request ")
+      this.showNotification('error', "Execution failed!. The data entered might be not valid.")
     })
 
 
@@ -227,7 +231,11 @@ export class HomeComponent implements OnInit {
       }`
     }).subscribe((data) => {
       console.log( "Update response ",data)
+      this.showNotification('success', 'Record deleted!!')
       this.getStudentDetailsFromDataBase();
+    },
+    () => {
+      this.showNotification('error', 'Record not removed!, something wrong in the server.')
     })
 
     
